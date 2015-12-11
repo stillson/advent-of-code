@@ -220,6 +220,25 @@ fn main() {
                 println!("hits1: {}\nhits2: {}", x, y);
             },
             "scratch" => {
+                let t1 = "toggle 333,60 through 748,159";
+                let t2 = "turn off 87,577 through 484,608";
+                let t3 = "turn on 809,648 through 826,999";
+
+                let x = t3;
+
+                let nums = Regex::new("[0-9]+").unwrap();
+                let coords: Vec<_> = nums.find_iter(x).map(|tupl| &x[tupl.0..tupl.1]).collect();
+                //this is driving me nuts, can prolly be accomplished inside the previous map
+                //but I can't figure out how to get it to do the alloc there
+                let coords: Vec<_> = coords.iter().map(|val| val.parse::<usize>().unwrap()).collect();
+
+                let action = if x.starts_with("toggle") {0}
+                    else if x.starts_with("turn off") {-1}
+                    else if x.starts_with("turn on") {1}
+                    else {panic!("this really shouldn't happen")};
+
+                println!("{:?}\n{}", coords, action);
+
             },
             _ => println!("something happened")
         }
