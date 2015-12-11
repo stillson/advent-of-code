@@ -221,8 +221,10 @@ impl Advent {
             };
 
             for i in coords[0]..coords[2]+1 {
+                let m = i * w;
+
                 for j in coords[1]..coords[3]+1 {
-                    let n = i * w + j;
+                    let n = m + j;
 
                     grid[n] = match action {
                         Lights::On => true,
