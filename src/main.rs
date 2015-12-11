@@ -192,8 +192,12 @@ impl Advent {
         (hits, hits_2)
     }
 
-    fn d6(&self) -> usize {
-        let mut grid: [[bool; 1000]; 1000] = [[false; 1000]; 1000];
+    //rather just keep one fn than yp the whole thing to change like five lines
+    fn d6(&self) /*-> (usize, usize)*/ {
+        //let mut grid: [[bool; 1000]; 1000] = [[false; 1000]; 1000];
+        //println!("grid!");
+        let mut grid_scalar: [[usize; 1000]; 1000] = [[0; 1000]; 1000];
+        println!("grid_scalar!");
         let nums = Regex::new("[0-9]+").unwrap();
 
         let f = File::open("data/d6").unwrap();
@@ -217,27 +221,52 @@ impl Advent {
                 panic!("this should not happen");
             };
 
+            println!("{:?}\n{:?}", coords, action);
+
             for i in coords[0]..coords[2]+1 {
                 for j in coords[1]..coords[3]+1 {
+                /*
                     grid[i][j] = match action {
                         Lights::On => true,
                         Lights::Off => false,
                         Lights::Toggle => !grid[i][j]
                     };
+                */
+
+                    match action {
+                        Lights::On => {
+                            grid_scalar[i][j] += 1;
+                        },
+                        Lights::Off => {
+                            if grid_scalar[i][j] > 0 {
+                                grid_scalar[i][j] -= 1;
+                            }
+                        },
+                        Lights::Toggle => {
+                            grid_scalar[i][j] += 2;
+                        }
+                    }
                 }
             }
         }
 
         let mut count = 0;
+        let mut count_scalar = 0;
         for i in 0..1000 {
             for j in 0..1000 {
+            /*
                 if grid[i][j] {
                     count += 1;
                 }
+            */
+
+                count_scalar += grid_scalar[i][j];
             }
         }
 
-        count
+        println!("{}", count_scalar);
+
+        //(count, count_scalar)
     }
 }
 
@@ -275,8 +304,8 @@ fn main() {
                 println!("hits1: {}\nhits2: {}", x, y);
             },
             "d6" => {
-                let x = Advent.d6();
-                println!("count: {}", x);
+                /*let (x, y) =*/ Advent.d6();
+                //println!("count: {}\nscalar: {}", x, y);
             },
             "scratch" => {
             },
