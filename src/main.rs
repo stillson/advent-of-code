@@ -1,7 +1,11 @@
+extern crate crypto;
+
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::collections::HashSet;
+use crypto::digest::Digest;
+use crypto::md5::Md5;
 
 struct Advent;
 
@@ -103,6 +107,25 @@ impl Advent {
         }
         (visited.len(), visited_sr.len())
     }
+
+    fn d4(&self, hash_start: &str) -> usize {
+        let key = "iwrupvqb";
+        let mut md5 = Md5::new();
+
+        let mut i = 0;
+        let mut result = String::new();
+        while !result.starts_with(&hash_start) {
+            i += 1;
+
+            let attempt = format!("{}{}", key, i);
+
+            md5.input_str(&attempt);
+            result = md5.result_str();
+            md5.reset();
+        }
+        
+        i
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -126,6 +149,13 @@ fn main() {
             "d3" => {
                 let (x, y) = Advent.d3();
                 println!("presents:\n  y1: {}\n  y2: {}", x, y);
+            },
+            "d4" => {
+                println!("this might take awhile");
+                let x = Advent.d4("00000"),
+                let y = Advent.d4("000000"),
+
+                println!("five-char: {}\nsix-char: {}", x, y);
             },
             _ => println!("something happened")
         }
@@ -154,4 +184,30 @@ fn test_d3() {
 
     assert_eq!(x, 2572);
     assert_eq!(y, 2631);
+}
+
+//the problem itself calls for five- and six-char collisions
+//that is uh, like ten million hashes to compute
+//so, this instead
+#[test]
+fn test_d4_three() {
+    let x = Advent.d4("000");
+
+    assert_eq!(x, 2215);
+}
+
+#[test]
+#[ignore]
+fn test_d4_five() {
+    let x = Advent.d4("00000");
+
+    assert_eq!(x, 346386);
+}
+
+#[test]
+#[ignore]
+fn test_d4_six() {
+    let x = Advent.d4("000000");
+
+    assert_eq!(x, 9958218);
 }

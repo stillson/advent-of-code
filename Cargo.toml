@@ -2,3 +2,6 @@
 name = "advent"
 version = "0.1.0"
 authors = ["Alice Maz <alice@alicemaz.com>"]
+
+[dependencies]
+rust-crypto = "~0.2.34"
