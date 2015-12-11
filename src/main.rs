@@ -9,6 +9,13 @@ use crypto::digest::Digest;
 use crypto::md5::Md5;
 use regex::Regex;
 
+#[derive(Debug)]
+enum Lights {
+    On,
+    Off,
+    Toggle
+}
+
 struct Advent;
 
 impl Advent {
@@ -184,6 +191,54 @@ impl Advent {
 
         (hits, hits_2)
     }
+
+    fn d6(&self) -> usize {
+        let mut grid: [[bool; 1000]; 1000] = [[false; 1000]; 1000];
+        let nums = Regex::new("[0-9]+").unwrap();
+
+        let f = File::open("data/d6").unwrap();
+        let f = BufReader::new(f);
+
+        for line in f.lines() {
+            let line = line.unwrap();
+
+            //this is driving me nuts, can prolly be accomplished in one line
+            //but I can't figure out how to get it to do the alloc in the map
+            let coords: Vec<_> = nums.find_iter(&line).map(|tupl| &line[tupl.0..tupl.1]).collect();
+            let coords: Vec<_> = coords.iter().map(|val| val.parse::<usize>().unwrap()).collect();
+
+            let action = if line.starts_with("turn on") {
+                Lights::On
+            } else if line.starts_with("turn off") {
+                Lights::Off
+            } else if line.starts_with("toggle") {
+                Lights::Toggle
+            } else {
+                panic!("this should not happen");
+            };
+
+            for i in coords[0]..coords[2]+1 {
+                for j in coords[1]..coords[3]+1 {
+                    grid[i][j] = match action {
+                        Lights::On => true,
+                        Lights::Off => false,
+                        Lights::Toggle => !grid[i][j]
+                    };
+                }
+            }
+        }
+
+        let mut count = 0;
+        for i in 0..1000 {
+            for j in 0..1000 {
+                if grid[i][j] {
+                    count += 1;
+                }
+            }
+        }
+
+        count
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -219,26 +274,11 @@ fn main() {
                 let (x, y) = Advent.d5();
                 println!("hits1: {}\nhits2: {}", x, y);
             },
+            "d6" => {
+                let x = Advent.d6();
+                println!("count: {}", x);
+            },
             "scratch" => {
-                let t1 = "toggle 333,60 through 748,159";
-                let t2 = "turn off 87,577 through 484,608";
-                let t3 = "turn on 809,648 through 826,999";
-
-                let x = t3;
-
-                let nums = Regex::new("[0-9]+").unwrap();
-                let coords: Vec<_> = nums.find_iter(x).map(|tupl| &x[tupl.0..tupl.1]).collect();
-                //this is driving me nuts, can prolly be accomplished inside the previous map
-                //but I can't figure out how to get it to do the alloc there
-                let coords: Vec<_> = coords.iter().map(|val| val.parse::<usize>().unwrap()).collect();
-
-                let action = if x.starts_with("toggle") {0}
-                    else if x.starts_with("turn off") {-1}
-                    else if x.starts_with("turn on") {1}
-                    else {panic!("this really shouldn't happen")};
-
-                println!("{:?}\n{}", coords, action);
-
             },
             _ => println!("something happened")
         }
