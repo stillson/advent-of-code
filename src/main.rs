@@ -5,7 +5,7 @@ use std::fs::File;
 struct Advent;
 
 impl Advent {
-    fn d1(&self) {
+    fn d1(&self) -> (i32, usize) {
         let input = include_bytes!("../data/d1");
         let mut floor = 0;
         let mut basement = 0;
@@ -22,10 +22,10 @@ impl Advent {
             }
         }
 
-        println!("floor {}\nbasement {}", floor, basement);
+        (floor, basement)
     }
 
-    fn d2(&self) {
+    fn d2(&self) -> (i32, i32) {
         let f = File::open("data/d2").unwrap();
         let f = BufReader::new(f);
 
@@ -45,10 +45,17 @@ impl Advent {
 
             let (p1, p2, p3) = (2 * (lwh[0] + lwh[1]), 2 * (lwh[0] + lwh[2]), 2 * (lwh[1] + lwh[2]));
             ribbon += least(p1, p2, p3) + lwh[0] * lwh[1] * lwh[2];
-
         }
-        
-        println!("paper: {}\nribbon: {}", paper, ribbon);
+
+        (paper, ribbon)
+    }
+
+    fn d3(&self) {
+        let input = include_bytes!("../data/d3");
+
+        for i in 0..20 {
+            println!("{}", input[i]);
+        }
     }
 }
 
@@ -62,9 +69,32 @@ fn main() {
     if args.len() > 1 {
         //this is silly but whatevs
         match &*args[1] {
-            "d1" => Advent.d1(),
-            "d2" => Advent.d2(),
+            "d1" => {
+                let (x, y) = Advent.d1();
+                println!("floor: {}\nbasement: {}", x, y);
+            },
+            "d2" => {
+                let (x, y) = Advent.d2();
+                println!("paper: {}\nribbon: {}", x, y);
+            },
+            "d3" => Advent.d3(),
             _ => println!("something happened")
         }
     }
+}
+
+#[test]
+fn test_d1() {
+    let (x, y) = Advent.d1();
+
+    assert_eq!(x, 232);
+    assert_eq!(y, 1783);
+}
+
+#[test]
+fn test_d2() {
+    let (x, y) = Advent.d2();
+
+    assert_eq!(x, 1606483);
+    assert_eq!(y, 3842356);
 }
