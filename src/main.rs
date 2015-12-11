@@ -193,12 +193,11 @@ impl Advent {
     }
 
     //rather just keep one fn than yp the whole thing to change like five lines
-    fn d6(&self) /*-> (usize, usize)*/ {
-        //let mut grid: [[bool; 1000]; 1000] = [[false; 1000]; 1000];
-        //println!("grid!");
-        let mut grid_scalar: [[usize; 1000]; 1000] = [[0; 1000]; 1000];
-        println!("grid_scalar!");
+    fn d6(&self) -> (usize, usize) {
+        let mut grid = vec![false; 1000000];
+        let mut grid_scalar = vec![0; 1000000];
         let nums = Regex::new("[0-9]+").unwrap();
+        let w = 1000;
 
         let f = File::open("data/d6").unwrap();
         let f = BufReader::new(f);
@@ -221,29 +220,27 @@ impl Advent {
                 panic!("this should not happen");
             };
 
-            println!("{:?}\n{:?}", coords, action);
-
             for i in coords[0]..coords[2]+1 {
                 for j in coords[1]..coords[3]+1 {
-                /*
-                    grid[i][j] = match action {
+                    let n = i * w + j;
+
+                    grid[n] = match action {
                         Lights::On => true,
                         Lights::Off => false,
-                        Lights::Toggle => !grid[i][j]
+                        Lights::Toggle => !grid[n]
                     };
-                */
 
                     match action {
                         Lights::On => {
-                            grid_scalar[i][j] += 1;
+                            grid_scalar[n] += 1;
                         },
                         Lights::Off => {
-                            if grid_scalar[i][j] > 0 {
-                                grid_scalar[i][j] -= 1;
+                            if grid_scalar[n] > 0 {
+                                grid_scalar[n] -= 1;
                             }
                         },
                         Lights::Toggle => {
-                            grid_scalar[i][j] += 2;
+                            grid_scalar[n] += 2;
                         }
                     }
                 }
@@ -252,21 +249,15 @@ impl Advent {
 
         let mut count = 0;
         let mut count_scalar = 0;
-        for i in 0..1000 {
-            for j in 0..1000 {
-            /*
-                if grid[i][j] {
-                    count += 1;
-                }
-            */
-
-                count_scalar += grid_scalar[i][j];
+        for i in 0..1000000 {
+            if grid[i] {
+                count += 1;
             }
+
+            count_scalar += grid_scalar[i];
         }
 
-        println!("{}", count_scalar);
-
-        //(count, count_scalar)
+        (count, count_scalar)
     }
 }
 
@@ -304,8 +295,8 @@ fn main() {
                 println!("hits1: {}\nhits2: {}", x, y);
             },
             "d6" => {
-                /*let (x, y) =*/ Advent.d6();
-                //println!("count: {}\nscalar: {}", x, y);
+                let (x, y) = Advent.d6();
+                println!("count: {}\nscalar: {}", x, y);
             },
             "scratch" => {
             },
@@ -370,4 +361,12 @@ fn test_d5() {
 
     assert_eq!(x, 238);
     assert_eq!(y, 69);
+}
+
+#[test]
+fn test_d6() {
+    let (x, y) = Advent.d6();
+
+    assert_eq!(x, 400410);
+    assert_eq!(y, 15343601);
 }
