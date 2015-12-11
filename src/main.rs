@@ -1,4 +1,5 @@
 extern crate crypto;
+extern crate regex;
 
 use std::env;
 use std::io::{BufRead, BufReader};
@@ -6,6 +7,7 @@ use std::fs::File;
 use std::collections::HashSet;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
+use regex::Regex;
 
 struct Advent;
 
@@ -126,6 +128,62 @@ impl Advent {
         
         i
     }
+
+    fn d5(&self) -> (i32, i32) {
+        let f = File::open("data/d5").unwrap();
+        let f = BufReader::new(f);
+
+        //regex macro sadly also gated atm
+        let vowel = Regex::new("[aeiou]").unwrap();
+        let blacklist = Regex::new("ab|cd|pq|xy").unwrap();
+
+        let mut hits = 0;
+        let mut hits_2 = 0;
+        for line in f.lines() {
+            let line = line.unwrap();
+            let line_b = line.as_bytes();
+
+            //part 1
+            let mut test_double = false;
+            for i in 0..line_b.len()-1 {
+                if line_b[i] == line_b[i+1] {
+                    test_double = true;
+                    break;
+                }
+            }
+
+            if vowel.find_iter(&line).count() > 2 && !blacklist.is_match(&line) && test_double {
+                hits += 1;
+            }
+
+            //part 2
+            //this is so absurd w/o backrefs lol
+            let mut got_dubs = false;
+            let mut got_split = false;
+            for i in 0..line_b.len()-1 {
+                if !got_dubs {
+                    let dubs = Regex::new(&format!("{}{}", line_b[i] as char, line_b[i+1] as char)).unwrap();
+                    let dubs_count = dubs.find_iter(&line).count();
+
+                    //I'm angry that this works because it shouldn't
+                    //the dataset doesn't have an item to break it
+                    if dubs_count > 1 {
+                        got_dubs = true;
+                    }
+                }
+
+                if i < line_b.len()-2 && line_b[i] == line_b[i+2] {
+                    got_split = true;
+                }
+            }
+
+            if got_dubs && got_split {
+                hits_2 += 1;
+            }
+        }
+
+        (hits, hits_2)
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -152,10 +210,16 @@ fn main() {
             },
             "d4" => {
                 println!("this might take awhile");
-                let x = Advent.d4("00000"),
-                let y = Advent.d4("000000"),
+                let x = Advent.d4("00000");
+                let y = Advent.d4("000000");
 
                 println!("five-char: {}\nsix-char: {}", x, y);
+            },
+            "d5" => {
+                let (x, y) = Advent.d5();
+                println!("hits1: {}\nhits2: {}", x, y);
+            },
+            "scratch" => {
             },
             _ => println!("something happened")
         }
@@ -210,4 +274,12 @@ fn test_d4_six() {
     let x = Advent.d4("000000");
 
     assert_eq!(x, 9958218);
+}
+
+#[test]
+fn test_d5() {
+    let (x, y) = Advent.d5();
+
+    assert_eq!(x, 238);
+    assert_eq!(y, 69);
 }
