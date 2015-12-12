@@ -57,24 +57,13 @@ struct Wire {
 }
 
 impl Wire {
-    fn new(line: &str, cache: &mut HashMap<String, u16>) -> (String, Wire) {
+    fn new(line: &str) -> (String, Wire) {
         let words = line.split(" ").collect::<Vec<_>>();
 
         let name: &str = words[words.len() - 1];
 
         let (op, items) = match words.len() {
-            3 => {
-                println!("words0: {}", words[0]);
-                let val = words[0].parse::<u16>();
-
-                match val {
-                    Ok(val) => {
-                        cache.insert(name.to_string(), val);
-                        (Ops::Id, ("", words[0]))
-                    },
-                    Err(_) => (Ops::Id, ("", words[0]))
-                }
-            },
+            3 => (Ops::Id, ("", words[0])),
             4 => (Ops::Not, ("", words[1])),
             5 => (Ops::from_str(words[1]).unwrap(), (words[0], words[2])),
             _ => panic!("this shouldn't happen")
@@ -380,7 +369,7 @@ impl Advent {
         (count, count_scalar)
     }
 
-    fn d7(&self) {
+    fn d7(&self) -> (u16, u16) {
         let f = File::open("data/d7").unwrap();
         let f = BufReader::new(f);
 
@@ -389,20 +378,21 @@ impl Advent {
 
         for line in f.lines() {
             let line = line.unwrap();
-            let (name, wire) = Wire::new(&line, &mut cache);
+            let (name, wire) = Wire::new(&line);
             map.insert(name, wire);
         }
 
         let map = map;
 
         let a1 = map.get("a").unwrap().output(&map, &mut cache);
-        println!("a1: {}", a1);
 
         cache.clear();
+        //cf line 75, String is obviously not what I actually want
         cache.insert("b".to_string(), a1);
 
         let a2 = map.get("a").unwrap().output(&map, &mut cache);
-        println!("a2: {}", a2);
+
+        (a1, a2)
     }
 }
 
@@ -443,7 +433,8 @@ fn main() {
                 println!("count: {}\nscalar: {}", x, y);
             },
             "d7" => {
-                Advent.d7();
+                let (x, y) = Advent.d7();
+                println!("first pass: {}\nsecond pass: {}", x, y);
             },
             "scratch" => {
             },
