@@ -2,6 +2,7 @@ extern crate crypto;
 extern crate regex;
 
 use std::env;
+use std::str::FromStr;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::collections::{HashMap, HashSet};
@@ -44,25 +45,60 @@ impl FromStr for Ops {
     }
 }
 
-//there is prolly a nicer way to do this with generics
-//or like, idk, something. this is dumb. read more later
 struct Wire {
-    name: &str,
     op: Ops,
-    left: Some(&str),
-    right: Some(&str),
-    num: Some(u16)
+    //I am... not a fan of this
+    //there is probably a Right Way using generics
+    //need to read more docs, variable type _and_ number is... idk
+    //for now accept this is "a (good|bad) programmer can write javascript in any language"
+    //essentially faking dynamic typing by parsing out ints on the fly lol
+    items: (String, String)
 }
 
 impl Wire {
-    fn value(&self, &map: HashMap) -> u16 {
-        if self.op == Ops::Id {
-            self.num.unwrap()
-        } else if self.op == Ops::Not {
-            !map.get(self.right.unwrap()).unwrap().value(&map)
-        } else {
-            
-            
+    fn new(line: &str) -> (String, Wire) {
+        let words = line.split(" ").collect::<Vec<_>>();
+
+        let name: &str = words[words.len() - 1];
+
+        let (op, items) = match words.len() {
+            3 => (Ops::Id, ("", words[0])),
+            4 => (Ops::Not, ("", words[1])),
+            5 => (Ops::from_str(words[1]).unwrap(), (words[0], words[2])),
+            _ => panic!("this shouldn't happen")
+        };
+
+        let wire = Wire {
+            op: op,
+            items: (items.0.to_string(), items.1.to_string())
+        };
+
+        (name.to_string(), wire)
+    }
+
+    //so this takes something from the items tuple and returns a u16
+    //either parsed out, or by calling the parent
+    //the clever/dangerous bit is in output, matching on ops
+    //where I get to make assumptions about whether the left item is empty
+    fn input(&self, item: &str, map: &HashMap<String, Wire>) -> u16 {
+        let val = item.parse::<u16>();
+
+        match val {
+            Ok(val) => val,
+            Err(_) => map.get(item).unwrap().output(map)
+        }
+    }
+
+    fn output(&self, map: &HashMap<String, Wire>) -> u16 {
+        println!("{} {:?} {}", self.items.0, self.op, self.items.1);
+
+        match self.op {
+            Ops::Id => self.input(&self.items.1, &map),
+            Ops::Not => !self.input(&self.items.1, &map),
+            Ops::And => self.input(&self.items.0, &map) & self.input(&self.items.1, &map),
+            Ops::Or => self.input(&self.items.0, &map) | self.input(&self.items.1, &map),
+            Ops::Rsh => self.input(&self.items.0, &map) >> self.input(&self.items.1, &map),
+            Ops::Lsh => self.input(&self.items.0, &map) << self.input(&self.items.1, &map)
         }
     }
 }
@@ -317,30 +353,21 @@ impl Advent {
         let f = File::open("data/d7").unwrap();
         let f = BufReader::new(f);
 
+        let mut map = HashMap::new();
+
         for line in f.lines() {
             let line = line.unwrap();
+            let (name, wire) = Wire::new(&line);
+            map.insert(name, wire);
         }
+
+        let testy = map.get("a").unwrap().output(&map);
+        println!("testy: {}", testy);
     }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
     if x < y && x < z {x} else if y < z {y} else {z}
-}
-
-fn d7_line_parse(line: &str) {
-    let words = line.split(" ").collect();
-
-    let name = words[words.len() - 1];
-
-    if words.len() == 3 {
-        //[0] u16 or str
-    } else if words.len() == 4 {
-        //[0] is NOT [1] is str
-    } else if words.len() == 5 {
-        //[0] [2] u16 or str, [1] OP
-    }
-        
-    
 }
 
 fn main() {
@@ -374,6 +401,9 @@ fn main() {
             "d6" => {
                 let (x, y) = Advent.d6();
                 println!("count: {}\nscalar: {}", x, y);
+            },
+            "d7" => {
+                Advent.d7();
             },
             "scratch" => {
             },
