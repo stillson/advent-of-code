@@ -64,8 +64,15 @@ impl Wire {
         let (op, items) = match words.len() {
             3 => {
                 println!("words0: {}", words[0]);
-                cache.insert(name.to_string(), words[0].parse::<u16>().unwrap());
-                (Ops::Id, ("", ""))
+                let val = words[0].parse::<u16>();
+
+                match val {
+                    Ok(val) => {
+                        cache.insert(name.to_string(), val);
+                        (Ops::Id, ("", ""))
+                    },
+                    Err(_) => (Ops::Id, ("", words[0]))
+                }
             },
             4 => (Ops::Not, ("", words[1])),
             5 => (Ops::from_str(words[1]).unwrap(), (words[0], words[2])),
@@ -93,31 +100,31 @@ impl Wire {
             return *cache.get(item).unwrap();
         }
 
+        //this was... a lot more clever before the cache
         let val = item.parse::<u16>();
 
         match val {
             Ok(val) => val,
-            Err(_) => map.get(item).unwrap().output(map, cache)
+            Err(_) => {
+                let val = map.get(item).unwrap().output(map, cache);
+                cache.insert(item.to_string(), val);
+
+                val
+            }
         }
     }
 
     fn output(&self, map: &HashMap<String, Wire>, cache: &mut HashMap<String, u16>) -> u16 {
-        println!("{} {:?} {}", self.items.0, self.op, self.items.1);
+        //println!("{} {:?} {}", self.items.0, self.op, self.items.1);
 
-        let out = match self.op {
+        match self.op {
             Ops::Id => self.input(&self.items.1, map, cache),
             Ops::Not => !self.input(&self.items.1, map, cache),
             Ops::And => self.input(&self.items.0, map, cache) & self.input(&self.items.1, map, cache),
             Ops::Or => self.input(&self.items.0, map, cache) | self.input(&self.items.1, map, cache),
             Ops::Rsh => self.input(&self.items.0, map, cache) >> self.input(&self.items.1, map, cache),
             Ops::Lsh => self.input(&self.items.0, map, cache) << self.input(&self.items.1, map, cache)
-        };
-
-        //self.op = Ops::Id;
-        //self.items.1 = out.to_string();
-        //*lol += 1;
-
-        out
+        }
     }
 }
 
@@ -376,16 +383,14 @@ impl Advent {
 
         for line in f.lines() {
             let line = line.unwrap();
-            let (name, mut wire) = Wire::new(&line, &mut cache);
+            let (name, wire) = Wire::new(&line, &mut cache);
             map.insert(name, wire);
         }
 
         let map = map;
 
-        let mut lol = 0;
-
-        let testy = map.get("h").unwrap().output(&map, &mut cache);
-        println!("testy: {}, lol: {}", testy, lol);
+        let testy = map.get("a").unwrap().output(&map, &mut cache);
+        println!("testy: {}", testy);
     }
 }
 
