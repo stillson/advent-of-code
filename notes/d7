@@ -48,3 +48,7 @@ so it always ends with the name of the result aka our hashmap key, makes sense t
 * if Op && Op != NOT, if [a-z]\+ => left_parent else [0-9]\+ left_val
 
 so we always have one name, one right. sometimes have op. if op sometimes have left. should I... compile six regexes? just process the characters in loops by hand? latter sounds more fun, at least... actually, the right way is just to split on 0x20 and work with the tokens, simple and clean.
+
+------
+
+ok, update. it seems to work. it also seems to be horrifically inefficient. my clever "recurse from b" thing means it recurses back to 44430 -> b like, I guess once for every single reference to every single item. it doesn't seem to be _infinite_, tests with values near the top of the tree work fine. but like, it's some kind of horrific complexity. getting aa takes like a couple dozen operations. getting bg takes like 20,000. so... the right thing to do I think, make the structs store their value once it is calculated and return that instead of calling. in theory this will collapse the tree almost instantly and take us down to polynomial time.

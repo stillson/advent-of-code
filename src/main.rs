@@ -92,14 +92,19 @@ impl Wire {
     fn output(&self, map: &HashMap<String, Wire>) -> u16 {
         println!("{} {:?} {}", self.items.0, self.op, self.items.1);
 
-        match self.op {
+        let out = match self.op {
             Ops::Id => self.input(&self.items.1, &map),
             Ops::Not => !self.input(&self.items.1, &map),
             Ops::And => self.input(&self.items.0, &map) & self.input(&self.items.1, &map),
             Ops::Or => self.input(&self.items.0, &map) | self.input(&self.items.1, &map),
             Ops::Rsh => self.input(&self.items.0, &map) >> self.input(&self.items.1, &map),
             Ops::Lsh => self.input(&self.items.0, &map) << self.input(&self.items.1, &map)
-        }
+        };
+
+        self.op = Ops::Id;
+        self.items.1 = out.to_string();
+
+        out
     }
 }
 
@@ -361,7 +366,7 @@ impl Advent {
             map.insert(name, wire);
         }
 
-        let testy = map.get("a").unwrap().output(&map);
+        let testy = map.get("aa").unwrap().output(&map);
         println!("testy: {}", testy);
     }
 }
