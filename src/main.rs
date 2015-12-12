@@ -4,7 +4,7 @@ extern crate regex;
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use crypto::digest::Digest;
 use crypto::md5::Md5;
 use regex::Regex;
@@ -14,6 +14,57 @@ enum Lights {
     On,
     Off,
     Toggle
+}
+
+#[derive(Debug)]
+enum Ops {
+    And,
+    Or,
+    Not,
+    Lsh,
+    Rsh,
+    //this is not in the file, but simplifes some things
+    Id
+}
+
+//this is a neat lil feature, hm
+//look into whether I can map directly to fn pointers or some such
+impl FromStr for Ops {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Ops, ()> {
+        match s {
+            "AND" => Ok(Ops::And),
+            "OR" => Ok(Ops::Or),
+            "NOT" => Ok(Ops::Not),
+            "LSHIFT" => Ok(Ops::Lsh),
+            "RSHIFT" => Ok(Ops::Rsh),
+            _ => Err(())
+        }
+    }
+}
+
+//there is prolly a nicer way to do this with generics
+//or like, idk, something. this is dumb. read more later
+struct Wire {
+    name: &str,
+    op: Ops,
+    left: Some(&str),
+    right: Some(&str),
+    num: Some(u16)
+}
+
+impl Wire {
+    fn value(&self, &map: HashMap) -> u16 {
+        if self.op == Ops::Id {
+            self.num.unwrap()
+        } else if self.op == Ops::Not {
+            !map.get(self.right.unwrap()).unwrap().value(&map)
+        } else {
+            
+            
+        }
+    }
 }
 
 struct Advent;
@@ -261,17 +312,41 @@ impl Advent {
 
         (count, count_scalar)
     }
+
+    fn d7(&self) {
+        let f = File::open("data/d7").unwrap();
+        let f = BufReader::new(f);
+
+        for line in f.lines() {
+            let line = line.unwrap();
+        }
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
     if x < y && x < z {x} else if y < z {y} else {z}
 }
 
+fn d7_line_parse(line: &str) {
+    let words = line.split(" ").collect();
+
+    let name = words[words.len() - 1];
+
+    if words.len() == 3 {
+        //[0] u16 or str
+    } else if words.len() == 4 {
+        //[0] is NOT [1] is str
+    } else if words.len() == 5 {
+        //[0] [2] u16 or str, [1] OP
+    }
+        
+    
+}
+
 fn main() {
     let args: Vec<_> = env::args().collect();
 
     if args.len() > 1 {
-        //this is silly but whatevs
         match &*args[1] {
             "d1" => {
                 let (x, y) = Advent.d1();

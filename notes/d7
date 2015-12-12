@@ -1,0 +1,50 @@
+ook day 7 is fancy compared to everything so far. so they give me a target, 'a'. `a = lx`. `lx = lw | lv`. and so forth back to `b = 44430` and couple others. long list of ops, out of order. soo... couple approaches.
+
+* sort the list and execute it in sequence. this... hm. kiiind of a simple text match? we want...
+    - [0-9]\+ -> [a-z]\+
+    - matches of those a-z -> more a-z
+    - and so on
+
+but we'd also need to check back on stuff we missed. so... potentially pretty expensive. also I'd have to run all calcs which is unnecessary given I have a specific target
+
+* start from a and build a dependency tree. this seems like the most reasonable approach. read lines and parse each line into a struct with...
+    - name
+    - dependenc(y|ies)
+    - operation
+
+examples... x & y, simple. x >> 5, need to store that int somewhere. ~x, no int or dependencies beyond... its own? y = ~x, y depends on x. x = l ^ r, x depends on l/r, ok hm. so. a depends on lx, lx depends on lw and lv, lw ..., lv ..., etc. so... hashmap keyed on names of structs containing a 1/2-tuple of... names? pointers? update: some/none, girl, lol.
+
+whatever, idk, think process first data structures second. start at a. recurse to the ultimate parent(s?) which are simple assignments. assign... ah hm, I can do this in one function. we walk to the tree to the... bottom/"parent" lol. call on b returns 44430 to some fn that is trying to use it, whole thing returns up and we get our value. in theory this should work for arbitrary targets, just parse out the whole file and do the tree ad-hoc.
+
+* my third idea was start from the parents and calc their children but the above seems like the best way now that I've thought it out
+
+-----
+
+uh ok so data structures. parse every line of the file out into a hashmap keyed on names, values structs with
+
+* Some(value)
+* Some(parent1)
+* Some(op)
+* Some(parent2)
+
+ooh ok and instead of writing this big messy logic ball, method that returns its value. if some value return value else do the op with the returns of the parent(s) value methods. method? I mean I guess it needs a &self but also needs the hashmap... unless again it just stores pointers. why do I need a hashmap? actually it would just be a hashmap of pointers goddamn anyway wouldn't it. but... that *is* what I want actually ok. alloc everything in one pass, store parents as strings, do the lookups in the function. ok. 
+
+-----
+
+gah ok parsing the file is interesting because of the typechecker. valid forms...
+
+* 1 -> n
+* x -> n
+* NOT x -> n
+* 1 OP x -> n
+* x OP 1 -> n
+* x OP y -> n
+
+so it always ends with the name of the result aka our hashmap key, makes sense to work backwards maybe. soo...
+
+* [a-z]\+ => name
+* if [a-z]\+ => right_parent else [0-9]\+ right_val
+* if [A-Z]\+ => Op
+* if Op && Op != NOT, if [a-z]\+ => left_parent else [0-9]\+ left_val
+
+so we always have one name, one right. sometimes have op. if op sometimes have left. should I... compile six regexes? just process the characters in loops by hand? latter sounds more fun, at least... actually, the right way is just to split on 0x20 and work with the tokens, simple and clean.
