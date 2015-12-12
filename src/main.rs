@@ -56,13 +56,17 @@ struct Wire {
 }
 
 impl Wire {
-    fn new(line: &str) -> (String, Wire) {
+    fn new(line: &str, cache: &mut HashMap<String, u16>) -> (String, Wire) {
         let words = line.split(" ").collect::<Vec<_>>();
 
         let name: &str = words[words.len() - 1];
 
         let (op, items) = match words.len() {
-            3 => (Ops::Id, ("", words[0])),
+            3 => {
+                println!("words0: {}", words[0]);
+                cache.insert(name.to_string(), words[0].parse::<u16>().unwrap());
+                (Ops::Id, ("", ""))
+            },
             4 => (Ops::Not, ("", words[1])),
             5 => (Ops::from_str(words[1]).unwrap(), (words[0], words[2])),
             _ => panic!("this shouldn't happen")
@@ -70,6 +74,10 @@ impl Wire {
 
         let wire = Wire {
             op: op,
+            //this to_string shit is clearly The Wrong Thing
+            //but &'static str seems Even More Wrong
+            //really I want uh... str, but scoped to the function instantiating the struct
+            //rather than this function
             items: (items.0.to_string(), items.1.to_string())
         };
 
@@ -80,29 +88,34 @@ impl Wire {
     //either parsed out, or by calling the parent
     //the clever/dangerous bit is in output, matching on ops
     //where I get to make assumptions about whether the left item is empty
-    fn input(&self, item: &str, map: &HashMap<String, Wire>) -> u16 {
+    fn input(&self, item: &str, map: &HashMap<String, Wire>, cache: &mut HashMap<String, u16>) -> u16 {
+        if cache.contains_key(item) {
+            return *cache.get(item).unwrap();
+        }
+
         let val = item.parse::<u16>();
 
         match val {
             Ok(val) => val,
-            Err(_) => map.get(item).unwrap().output(map)
+            Err(_) => map.get(item).unwrap().output(map, cache)
         }
     }
 
-    fn output(&self, map: &HashMap<String, Wire>) -> u16 {
+    fn output(&self, map: &HashMap<String, Wire>, cache: &mut HashMap<String, u16>) -> u16 {
         println!("{} {:?} {}", self.items.0, self.op, self.items.1);
 
         let out = match self.op {
-            Ops::Id => self.input(&self.items.1, &map),
-            Ops::Not => !self.input(&self.items.1, &map),
-            Ops::And => self.input(&self.items.0, &map) & self.input(&self.items.1, &map),
-            Ops::Or => self.input(&self.items.0, &map) | self.input(&self.items.1, &map),
-            Ops::Rsh => self.input(&self.items.0, &map) >> self.input(&self.items.1, &map),
-            Ops::Lsh => self.input(&self.items.0, &map) << self.input(&self.items.1, &map)
+            Ops::Id => self.input(&self.items.1, map, cache),
+            Ops::Not => !self.input(&self.items.1, map, cache),
+            Ops::And => self.input(&self.items.0, map, cache) & self.input(&self.items.1, map, cache),
+            Ops::Or => self.input(&self.items.0, map, cache) | self.input(&self.items.1, map, cache),
+            Ops::Rsh => self.input(&self.items.0, map, cache) >> self.input(&self.items.1, map, cache),
+            Ops::Lsh => self.input(&self.items.0, map, cache) << self.input(&self.items.1, map, cache)
         };
 
-        self.op = Ops::Id;
-        self.items.1 = out.to_string();
+        //self.op = Ops::Id;
+        //self.items.1 = out.to_string();
+        //*lol += 1;
 
         out
     }
@@ -359,15 +372,20 @@ impl Advent {
         let f = BufReader::new(f);
 
         let mut map = HashMap::new();
+        let mut cache = HashMap::new();
 
         for line in f.lines() {
             let line = line.unwrap();
-            let (name, wire) = Wire::new(&line);
+            let (name, mut wire) = Wire::new(&line, &mut cache);
             map.insert(name, wire);
         }
 
-        let testy = map.get("aa").unwrap().output(&map);
-        println!("testy: {}", testy);
+        let map = map;
+
+        let mut lol = 0;
+
+        let testy = map.get("h").unwrap().output(&map, &mut cache);
+        println!("testy: {}, lol: {}", testy, lol);
     }
 }
 
