@@ -46,6 +46,7 @@ impl FromStr for Ops {
 }
 
 struct Wire {
+    name: String,
     op: Ops,
     //I am... not a fan of this
     //there is probably a Right Way using generics
@@ -69,7 +70,7 @@ impl Wire {
                 match val {
                     Ok(val) => {
                         cache.insert(name.to_string(), val);
-                        (Ops::Id, ("", ""))
+                        (Ops::Id, ("", words[0]))
                     },
                     Err(_) => (Ops::Id, ("", words[0]))
                 }
@@ -80,6 +81,7 @@ impl Wire {
         };
 
         let wire = Wire {
+            name: name.to_string(),
             op: op,
             //this to_string shit is clearly The Wrong Thing
             //but &'static str seems Even More Wrong
@@ -104,7 +106,11 @@ impl Wire {
         let val = item.parse::<u16>();
 
         match val {
-            Ok(val) => val,
+            Ok(val) => {
+                cache.insert(self.name.to_string(), val);
+
+                val
+            },
             Err(_) => {
                 let val = map.get(item).unwrap().output(map, cache);
                 cache.insert(item.to_string(), val);
@@ -389,8 +395,14 @@ impl Advent {
 
         let map = map;
 
-        let testy = map.get("a").unwrap().output(&map, &mut cache);
-        println!("testy: {}", testy);
+        let a1 = map.get("a").unwrap().output(&map, &mut cache);
+        println!("a1: {}", a1);
+
+        cache.clear();
+        cache.insert("b".to_string(), a1);
+
+        let a2 = map.get("a").unwrap().output(&map, &mut cache);
+        println!("a2: {}", a2);
     }
 }
 
