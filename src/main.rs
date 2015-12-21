@@ -394,6 +394,43 @@ impl Advent {
 
         (a1, a2)
     }
+
+    fn d8(&self) {
+        let f = File::open("data/d8").unwrap();
+        let f = BufReader::new(f);
+
+        let mut count = 0;
+
+        for line in f.lines() {
+            let line = line.unwrap();
+            let line = line.as_bytes();
+
+            //quotes
+            count += 2;
+
+            let mut i = 0;
+
+            while i < line.len() {
+                //backslash, step ahead
+                if line[i] == 0x5c {
+                    i += 1;
+
+                    //hex escape
+                    if line[i] == 0x78 {
+                        count += 3;
+                    //quote or backslash
+                    } else {
+                        count += 1;
+                    }
+                }
+
+            //step ahead. two steps cleanly avoids catching escaped backslash
+            i += 1;
+            }
+        }
+
+        println!("count: {}", count);
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -435,6 +472,9 @@ fn main() {
             "d7" => {
                 let (x, y) = Advent.d7();
                 println!("first pass: {}\nsecond pass: {}", x, y);
+            },
+            "d8" => {
+                Advent.d8();
             },
             "scratch" => {
             },
