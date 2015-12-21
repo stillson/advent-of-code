@@ -395,11 +395,12 @@ impl Advent {
         (a1, a2)
     }
 
-    fn d8(&self) {
+    fn d8(&self) -> (usize, usize) {
         let f = File::open("data/d8").unwrap();
         let f = BufReader::new(f);
 
         let mut count = 0;
+        let mut count2 = 0;
 
         for line in f.lines() {
             let line = line.unwrap();
@@ -407,6 +408,7 @@ impl Advent {
 
             //quotes
             count += 2;
+            count2 += 4;
 
             let mut i = 0;
 
@@ -418,9 +420,11 @@ impl Advent {
                     //hex escape
                     if line[i] == 0x78 {
                         count += 3;
+                        count2 += 1;
                     //quote or backslash
                     } else {
                         count += 1;
+                        count2 += 2;
                     }
                 }
 
@@ -429,7 +433,7 @@ impl Advent {
             }
         }
 
-        println!("count: {}", count);
+        (count, count2)
     }
 }
 
@@ -474,7 +478,8 @@ fn main() {
                 println!("first pass: {}\nsecond pass: {}", x, y);
             },
             "d8" => {
-                Advent.d8();
+                let (x, y) = Advent.d8();
+                println!("count: {}\ncount2: {}", x, y);
             },
             "scratch" => {
             },
@@ -547,4 +552,20 @@ fn test_d6() {
 
     assert_eq!(x, 400410);
     assert_eq!(y, 15343601);
+}
+
+#[test]
+fn test_d7() {
+    let (x, y) = Advent.d7();
+
+    assert_eq!(x, 3176);
+    assert_eq!(y, 14710);
+}
+
+#[test]
+fn test_d8() {
+    let (x, y) = Advent.d8();
+
+    assert_eq!(x, 1333);
+    assert_eq!(y, 2046);
 }
