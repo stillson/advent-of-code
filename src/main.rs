@@ -435,10 +435,86 @@ impl Advent {
 
         (count, count2)
     }
+
+    fn d9(&self) -> (usize, usize) {
+        let f = File::open("data/d9").unwrap();
+        let f = BufReader::new(f);
+
+        let mut graph: [[usize; 8]; 8] = [[0; 8]; 8];
+
+        //this is naive but the input is well-ordered so eh
+        let mut x = 0;
+        let mut y = 1;
+
+        for line in f.lines() {
+            let cost = line.unwrap()
+                .split(" ")
+                .last().unwrap()
+                .parse::<usize>().unwrap();
+
+            graph[x][y] = cost;
+            graph[y][x] = cost;
+
+            if y >= 7 {
+                x += 1;
+                y = x + 1;
+            } else {
+                y += 1;
+            }
+        }
+
+        let mut vec = vec!(0,1,2,3,4,5,6,7);
+
+        let mut routes = Vec::new();
+        permute(8, &mut vec, &mut routes);
+        let routes = routes;
+
+        let mut shortest = std::usize::MAX;
+        let mut longest = 0;
+        for route in routes {
+            let mut sum = 0;
+
+            for node in 0..route.len()-1 {
+                sum += graph[route[node] as usize][route[node+1] as usize];
+            }
+
+            if sum < shortest {
+                shortest = sum;
+            }
+
+            if sum > longest {
+                longest = sum;
+            }
+        }
+
+        (shortest, longest)
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
     if x < y && x < z {x} else if y < z {y} else {z}
+}
+
+fn permute(n: usize, vec: &mut Vec<u8>, acc: &mut Vec<Vec<u8>>) {
+    if n == 1 {
+        acc.push((*vec).to_vec());
+    } else {
+        for i in 0..n-1 {
+            permute(n-1, vec, acc);
+
+            if n % 2 == 0 {
+                let swap = vec[i];
+                vec[i] = vec[n-1];
+                vec[n-1] = swap;
+            } else {
+                let swap = vec[0];
+                vec[0] = vec[n-1];
+                vec[n-1] = swap;
+            }
+        }
+
+        permute(n-1, vec, acc);
+    }
 }
 
 fn main() {
@@ -480,6 +556,10 @@ fn main() {
             "d8" => {
                 let (x, y) = Advent.d8();
                 println!("count: {}\ncount2: {}", x, y);
+            },
+            "d9" => {
+                let (x, y) = Advent.d9();
+                println!("shortest: {}\nlongest: {}", x, y);
             },
             "scratch" => {
             },
@@ -568,4 +648,12 @@ fn test_d8() {
 
     assert_eq!(x, 1333);
     assert_eq!(y, 2046);
+}
+
+#[test]
+fn test_d9() {
+    let (x, y) = Advent.d9();
+
+    assert_eq!(x, 207);
+    assert_eq!(y, 804);
 }
