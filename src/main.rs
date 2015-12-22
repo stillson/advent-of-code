@@ -570,7 +570,7 @@ impl Advent {
     }
 
     fn d12(&self) -> i32 {
-        let json = include_str!("../data/d12");
+        let json = include_str!("../data/d12.json");
         let num = Regex::new("-*[0-9]+").unwrap();
 
         let sum = num.find_iter(&json)
