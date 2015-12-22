@@ -507,6 +507,67 @@ impl Advent {
 
         (len1, len2)
     }
+
+    fn d11(&self, input: &str) -> String {
+        let mut pw = input.as_bytes().to_vec();
+
+        let mut dubs = false;
+        let mut trips = false;
+        let mut clean = true;
+
+        while !(dubs && trips && clean) {
+            dubs = false;
+            trips = false;
+            clean = true;
+            let mut first_dub = 0;
+
+            pw[7] += 1;
+
+            for i in (0..8).rev() {
+                //above z
+                if pw[i] == 0x7b {
+                    pw[i-1] += 1;
+
+                    for j in i..8 {
+                        pw[j] = 0x61;
+                    }
+                }
+            }
+
+            //wanted to avoid 2 passes but, laziest bug fix
+            for i in (0..8).rev() {
+                //iol
+                if pw[i] == 0x69 || pw[i] == 0x6c || pw[i] == 0x6f {
+                    pw[i] += 1;
+
+                    if i != 7 {
+                        for j in i+1..8 {
+                            pw[j] = 0x61;
+                        }
+
+                        pw[7] -= 1;
+                    }
+
+                    clean = false;
+                    break;
+                }
+
+                if i > 1 && pw[i] == (pw[i-1] + 1) && pw[i] == (pw[i-2] + 2) {
+                    trips = true;
+                }
+
+                if i > 0 && pw[i] == pw[i-1] {
+                    if first_dub == 0 {
+                        first_dub = pw[i];
+                    } else if pw[i] != first_dub {
+                        dubs = true;
+                    }
+                }
+            }
+        }
+
+       std::str::from_utf8(&pw).unwrap().to_string()
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -609,6 +670,11 @@ fn main() {
             "d10" => {
                 let (x, y) = Advent.d10();
                 println!("length 40: {}\nlength 50: {}", x, y);
+            },
+            "d11" => {
+                let x = Advent.d11("vzbxkghb");
+                let y = Advent.d11("vzbxxyzz");
+                println!("pw 1: {}\npw 2: {}", x, y);
             },
             "scratch" => {
             },
@@ -713,4 +779,13 @@ fn test_d10() {
 
     assert_eq!(x, 492982);
     assert_eq!(y, 6989950);
+}
+
+#[test]
+fn test_d11() {
+    let x = Advent.d11("vzbxkghb");
+    let y = Advent.d11("vzbxxyzz");
+
+    assert_eq!(x, "vzbxxyzz");
+    assert_eq!(y, "vzcaabcc");
 }
