@@ -568,6 +568,19 @@ impl Advent {
 
        std::str::from_utf8(&pw).unwrap().to_string()
     }
+
+    fn d12(&self) -> i32 {
+        let json = include_str!("../data/d12");
+        let num = Regex::new("-*[0-9]+").unwrap();
+
+        let sum = num.find_iter(&json)
+            .map(|tupl| json[tupl.0..tupl.1].parse::<i32>().unwrap())
+            .fold(0i32, |acc, val| acc + val);
+
+        println!("{}", sum);
+
+        sum
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -675,6 +688,10 @@ fn main() {
                 let x = Advent.d11("vzbxkghb");
                 let y = Advent.d11("vzbxxyzz");
                 println!("pw 1: {}\npw 2: {}", x, y);
+            },
+            "d12" => {
+                let x = Advent.d12();
+                println!("sum: {}", x);
             },
             "scratch" => {
             },
