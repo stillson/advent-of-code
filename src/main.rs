@@ -489,6 +489,24 @@ impl Advent {
 
         (shortest, longest)
     }
+
+    fn d10(&self) -> (usize, usize) {
+        let mut vec = vec!(1,3,2,1,1,3,1,1,1,2).to_vec();
+
+        for _ in 0..40 {
+            vec = look_n_say(&vec);
+        }
+
+        let len1 = vec.len();
+
+        for _ in 0..10 {
+            vec = look_n_say(&vec);
+        }
+
+        let len2 = vec.len();
+
+        (len1, len2)
+    }
 }
 
 fn least(x: i32, y: i32, z: i32) -> i32 {
@@ -515,6 +533,33 @@ fn permute(n: usize, vec: &mut Vec<u8>, acc: &mut Vec<Vec<u8>>) {
 
         permute(n-1, vec, acc);
     }
+}
+
+fn look_n_say(arr: &Vec<u8>) -> Vec<u8> {
+    let mut prev = 0;
+    let mut count = 0;
+    let mut buff = Vec::new();
+
+    for n in arr {
+        if *n == prev {
+            count += 1;
+        } else {
+            if count > 0 {
+                buff.push(count);
+                buff.push(prev);
+            }
+
+            prev = *n;
+            count = 1;
+        }
+    }
+
+    if count > 0 {
+        buff.push(count);
+        buff.push(prev);
+    }
+
+    buff
 }
 
 fn main() {
@@ -560,6 +605,10 @@ fn main() {
             "d9" => {
                 let (x, y) = Advent.d9();
                 println!("shortest: {}\nlongest: {}", x, y);
+            },
+            "d10" => {
+                let (x, y) = Advent.d10();
+                println!("length 40: {}\nlength 50: {}", x, y);
             },
             "scratch" => {
             },
@@ -656,4 +705,12 @@ fn test_d9() {
 
     assert_eq!(x, 207);
     assert_eq!(y, 804);
+}
+
+#[test]
+fn test_d10() {
+    let (x, y) = Advent.d10();
+
+    assert_eq!(x, 492982);
+    assert_eq!(y, 6989950);
 }
